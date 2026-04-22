@@ -1,0 +1,15 @@
+# logger for ui configuration
+cfg_class_name: "GPCLoggerConfig"
+configured_class_name: "GPCLogger"
+
+level: WARNING
+
+output_to_stdout: False
+output_to_stderr: False
+output_to_file: True
+
+log_path: env
+
+rotation_enabled: False
+
+retention_enabled: False

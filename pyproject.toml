@@ -1,0 +1,25 @@
+[project]
+name = "gpclog"
+version = "0.2.0"
+description = "General Purpose Category Logger - A Python library for managing categorized logs in complex projects."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "Linnet Codes", email = "linnet.codes@gmail.com"},
+]
+dependencies = [
+    "loguru>=0.7.0",
+    "gpconfig>=0.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
