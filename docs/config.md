@@ -83,7 +83,7 @@ level: DEBUG
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `log_path` | `str` | `"auto"` | Log path: auto, env, home, or absolute path |
+| `log_path` | `str` | `"auto"` | Log path: auto, env, home, or an existing absolute directory |
 
 ### Rotation Configuration
 
@@ -196,9 +196,11 @@ config = GPCLoggerConfig(name="app", log_path="env")
 # Use user home directory
 config = GPCLoggerConfig(name="app", log_path="home")
 
-# Use absolute path
+# Use an existing absolute parent directory
 config = GPCLoggerConfig(name="app", log_path="/var/log/myapp")
 ```
+
+The directory passed in `log_path` must already exist. Unless the directory name is already `gpclog_output`, gpclog creates and uses a `gpclog_output` subdirectory inside it.
 
 ### Custom Log Format
 
@@ -286,27 +288,20 @@ logger = manager.get_object("logs.database")
 
 ## Type Validation
 
-`GPCLoggerConfig` inherits from Pydantic, providing complete type validation:
+`GPCLoggerConfig` inherits from Pydantic-based gpconfig classes, so field types are validated. The project does not currently validate the allowed values of `level` at config-construction time.
 
 ```python
 from gpclog.config import GPCLoggerConfig
-from pydantic import ValidationError
 
-# Valid configuration
 config = GPCLoggerConfig(
     name="app",
     level="DEBUG",
     rotation_size="10 MB",
 )
 
-# Type errors will raise ValidationError
-try:
-    config = GPCLoggerConfig(
-        name="app",
-        level="INVALID_LEVEL",  # May need custom validation
-    )
-except ValidationError as e:
-    print(f"Validation error: {e}")
+# Type validation applies to field shapes, but level names are not restricted here.
+config = GPCLoggerConfig(name="app", level="INVALID_LEVEL")
+assert config.level == "INVALID_LEVEL"
 ```
 
 ## Saving Configuration

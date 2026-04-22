@@ -31,22 +31,6 @@ logger.info("Hello, gpclog!")
 # Output to: ~/gpclog_output/my_category.log
 ```
 
-### Multi-Module Project
-
-```python
-import gpclog
-
-# Each module uses its own logger
-db_logger = gpclog.get_logger("database")
-api_logger = gpclog.get_logger("api")
-cache_logger = gpclog.get_logger("cache")
-
-# Each logger outputs to a separate file
-db_logger.info("Connected to database")   # -> database.log
-api_logger.info("API request received")   # -> api.log
-cache_logger.warning("Cache miss")        # -> cache.log
-```
-
 ### Using Configuration Files
 
 ```python
@@ -65,36 +49,30 @@ logger = gpclog.get_logger("database")
 logger = manager.get_object("logs.database")
 ```
 
-**Configuration file example (logs/database.yaml):**
+Configuration schema, multiprocess usage, rotation/retention, and API details are documented in `docs/`.
 
-```yaml
-cfg_class_name: "GPCLoggerConfig"
-configured_class_name: "GPCLogger"
-level: DEBUG
-output_to_stdout: true
-output_to_file: true
-log_path: auto
-rotation_enabled: true
-rotation_size: "50 MB"
-retention_enabled: true
-retention_days: 30
+## Documentation
+
+Build and validate the documentation locally:
+
+```bash
+venv/bin/mkdocs build --clean --strict
 ```
 
-## Log Levels
+Preview the documentation locally:
 
-```python
-logger = gpclog.get_logger("myapp")
-
-logger.debug("Debug information")
-logger.info("General information")
-logger.warning("Warning")
-logger.error("Error")
-logger.critical("Critical error")
+```bash
+venv/bin/mkdocs serve
 ```
 
 ## API Reference
 
-See the [API documentation](docs/api/en/index.md) for detailed usage.
+See:
+
+- [Docs home](docs/index.md)
+- [gpclog module](docs/gpclog.md)
+- [GPCLogger](docs/logger.md)
+- [GPCLoggerConfig](docs/config.md)
 
 ## License
 

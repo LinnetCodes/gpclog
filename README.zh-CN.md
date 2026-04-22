@@ -31,22 +31,6 @@ logger.info("Hello, gpclog!")
 # 输出到: ~/gpclog_output/my_category.log
 ```
 
-### 多模块项目
-
-```python
-import gpclog
-
-# 每个模块使用独立的 logger
-db_logger = gpclog.get_logger("database")
-api_logger = gpclog.get_logger("api")
-cache_logger = gpclog.get_logger("cache")
-
-# 各 logger 输出到独立文件
-db_logger.info("Connected to database")   # -> database.log
-api_logger.info("API request received")   # -> api.log
-cache_logger.warning("Cache miss")        # -> cache.log
-```
-
 ### 使用配置文件
 
 ```python
@@ -65,36 +49,30 @@ logger = gpclog.get_logger("database")
 logger = manager.get_object("logs.database")
 ```
 
-**配置文件示例 (logs/database.yaml)：**
+配置结构、多进程用法、轮转/保留策略以及完整 API 说明请查看 `docs/`。
 
-```yaml
-cfg_class_name: "GPCLoggerConfig"
-configured_class_name: "GPCLogger"
-level: DEBUG
-output_to_stdout: true
-output_to_file: true
-log_path: auto
-rotation_enabled: true
-rotation_size: "50 MB"
-retention_enabled: true
-retention_days: 30
+## 文档
+
+本地构建并校验文档：
+
+```bash
+venv/bin/mkdocs build --clean --strict
 ```
 
-## 日志级别
+本地预览文档：
 
-```python
-logger = gpclog.get_logger("myapp")
-
-logger.debug("调试信息")
-logger.info("一般信息")
-logger.warning("警告")
-logger.error("错误")
-logger.critical("严重错误")
+```bash
+venv/bin/mkdocs serve
 ```
 
 ## API 参考
 
-详细用法请参阅 [API 文档](docs/api/cn/index.md)。
+详见：
+
+- [文档首页](docs/zh/index.md)
+- [gpclog 模块](docs/zh/gpclog.md)
+- [GPCLogger 类](docs/zh/logger.md)
+- [GPCLoggerConfig 类](docs/zh/config.md)
 
 ## 许可证
 

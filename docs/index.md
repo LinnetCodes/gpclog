@@ -216,7 +216,7 @@ logger = GPCLogger(config)
 | `auto` | Auto-detect (recommended) | `auto` |
 | `env` | Use GPCLOG_PATH environment variable | `env` |
 | `home` | User home directory | `home` |
-| Absolute path | Specify exact path | `/var/log/myapp` |
+| Absolute path | Existing directory path | `/var/log/myapp` |
 
 ### Auto Mode Resolution
 
@@ -224,6 +224,8 @@ logger = GPCLogger(config)
 2. If exists and valid, use that path
 3. Otherwise, use user home directory
 4. Create `gpclog_output` subfolder in the specified directory
+
+For absolute paths, the directory must already exist. If the directory name is not already `gpclog_output`, gpclog writes under `<path>/gpclog_output/`.
 
 ### Using Environment Variables
 

@@ -83,7 +83,7 @@ level: DEBUG
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `log_path` | `str` | `"auto"` | 日志路径：auto, env, home, 或绝对路径 |
+| `log_path` | `str` | `"auto"` | 日志路径：auto, env, home，或已存在的绝对目录 |
 
 ### 轮转配置
 
@@ -196,9 +196,11 @@ config = GPCLoggerConfig(name="app", log_path="env")
 # 使用用户主目录
 config = GPCLoggerConfig(name="app", log_path="home")
 
-# 使用绝对路径
+# 使用已存在的绝对父目录
 config = GPCLoggerConfig(name="app", log_path="/var/log/myapp")
 ```
+
+`log_path` 指向的目录必须已经存在。除非目录名本身就是 `gpclog_output`，否则 gpclog 会在其下创建并使用 `gpclog_output` 子目录。
 
 ### 自定义日志格式
 
@@ -286,27 +288,20 @@ logger = manager.get_object("logs.database")
 
 ## 类型验证
 
-`GPCLoggerConfig` 继承自 Pydantic，提供完整的类型验证：
+`GPCLoggerConfig` 继承自基于 Pydantic 的 gpconfig 类，因此字段类型会被校验。但当前项目不会在配置对象创建阶段校验 `level` 的取值是否合法。
 
 ```python
 from gpclog.config import GPCLoggerConfig
-from pydantic import ValidationError
 
-# 正确的配置
 config = GPCLoggerConfig(
     name="app",
     level="DEBUG",
     rotation_size="10 MB",
 )
 
-# 类型错误的配置会抛出 ValidationError
-try:
-    config = GPCLoggerConfig(
-        name="app",
-        level="INVALID_LEVEL",  # 可能需要自定义验证
-    )
-except ValidationError as e:
-    print(f"Validation error: {e}")
+# 这里会校验字段类型，但不会限制 level 名称。
+config = GPCLoggerConfig(name="app", level="INVALID_LEVEL")
+assert config.level == "INVALID_LEVEL"
 ```
 
 ## 保存配置

@@ -216,7 +216,7 @@ logger = GPCLogger(config)
 | `auto` | 自动检测（推荐） | `auto` |
 | `env` | 使用 GPCLOG_PATH 环境变量 | `env` |
 | `home` | 用户主目录 | `home` |
-| 绝对路径 | 指定具体路径 | `/var/log/myapp` |
+| 绝对路径 | 已存在的目录路径 | `/var/log/myapp` |
 
 ### auto 模式解析流程
 
@@ -224,6 +224,8 @@ logger = GPCLogger(config)
 2. 如果存在且有效，使用该路径
 3. 否则使用用户主目录
 4. 最终在指定目录下创建 `gpclog_output` 子文件夹
+
+对于绝对路径，目录本身必须已经存在。如果目录名不是 `gpclog_output`，gpclog 实际会写入 `<path>/gpclog_output/`。
 
 ### 使用环境变量
 

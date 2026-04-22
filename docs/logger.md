@@ -143,7 +143,7 @@ config = GPCLoggerConfig(
     level="WARNING",           # Only WARNING and above
     output_to_stdout=False,    # No console output
     output_to_file=True,       # Output to file
-    log_path="/var/log/app",   # Custom log path
+    log_path="/var/log/app",   # Existing parent directory
     rotation_enabled=True,
     rotation_size="50 MB",
     retention_enabled=True,
@@ -154,6 +154,8 @@ logger = GPCLogger(config)
 logger.warning("This will be logged")
 logger.info("This will NOT be logged (below WARNING level)")
 ```
+
+If `log_path` is not already named `gpclog_output`, gpclog writes to a `gpclog_output` subdirectory under that directory.
 
 ### Creating from GPConfigManager
 
