@@ -1,12 +1,36 @@
 [project]
 name = "gpclog"
-version = "0.2.0"
+dynamic = ["version"]
 description = "General Purpose Category Logger - A Python library for managing categorized logs in complex projects."
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
-    {name = "Linnet Codes", email = "linnet.codes@gmail.com"},
+    { name = "Linnet Codes", email = "linnet.codes@gmail.com" },
+]
+keywords = [
+    "logging",
+    "loguru",
+    "gpconfig",
+    "categorized-logging",
+    "python",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Logging",
 ]
 dependencies = [
     "loguru>=0.7.0",
@@ -20,6 +44,18 @@ dev = [
     "ruff>=0.4.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/linnetcodes/gpclog"
+Documentation = "https://linnetcodes.github.io/gpclog"
+Repository = "https://github.com/linnetcodes/gpclog"
+Issues = "https://github.com/linnetcodes/gpclog/issues"
+
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/gpclog/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gpclog"]
