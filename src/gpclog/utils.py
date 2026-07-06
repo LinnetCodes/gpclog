@@ -1,7 +1,39 @@
 """Utility functions for gpclog."""
 
 import os
+import re
+import warnings
 from pathlib import Path
+
+_LOGGER_NAME_PATTERN = re.compile(r"[A-Za-z0-9_.-]+")
+
+
+def validate_logger_name(name: str) -> str:
+    """Validate a logger name against a strict whitelist.
+
+    Only the characters ``[A-Za-z0-9_.-]`` are permitted, and the entire
+    string must match. This exists to prevent path-traversal: ``logger_name``
+    is used to build file paths (e.g. ``log_dir / f"{name}.log"``), so values
+    such as ``../`` or ``/`` would write outside the intended directory.
+
+    Args:
+        name: The logger name to validate.
+
+    Returns:
+        The validated ``name``, unchanged.
+
+    Raises:
+        ValueError: If ``name`` is empty or contains characters outside the
+            whitelist.
+    """
+    if not isinstance(name, str):
+        raise ValueError(f"logger name must be a string (got {name!r})")
+    if not name or _LOGGER_NAME_PATTERN.fullmatch(name) is None:
+        raise ValueError(
+            f"invalid logger name {name!r}: only the characters "
+            "'[A-Za-z0-9_.-]' are permitted"
+        )
+    return name
 
 
 def resolve_log_path(log_path: str) -> Path:
@@ -12,13 +44,17 @@ def resolve_log_path(log_path: str) -> Path:
             - "auto": Auto-detect (GPCLOG_PATH env or home directory)
             - "env": Use GPCLOG_PATH environment variable
             - "home": Use user home directory
-            - Absolute path: Use specified path
+            - "cwd": Use the current working directory
+            - Absolute path: Use the specified existing absolute directory.
+              Relative paths are rejected; use the "cwd" mode if you want
+              current-working-directory output.
 
     Returns:
         Resolved Path object pointing to the log output directory.
 
     Raises:
-        ValueError: If path is invalid or cannot be resolved.
+        ValueError: If path is invalid, relative (in the else branch), or
+            cannot be resolved.
     """
     base_path: Path
 
@@ -29,9 +65,10 @@ def resolve_log_path(log_path: str) -> Path:
             base_path = Path(env_path)
         else:
             base_path = Path.home()
-            # Print message to user
-            print(
-                f"gpclog: Using home directory for logs: {base_path / 'gpclog_output'}"
+            # Warn the user (a library must not print to stdout)
+            warnings.warn(
+                f"gpclog: Using home directory for logs: {base_path / 'gpclog_output'}",
+                stacklevel=2,
             )
     elif log_path == "env":
         env_path = os.environ.get("GPCLOG_PATH")
@@ -40,9 +77,18 @@ def resolve_log_path(log_path: str) -> Path:
         base_path = Path(env_path)
     elif log_path == "home":
         base_path = Path.home()
+    elif log_path == "cwd":
+        base_path = Path.cwd()
     else:
-        # Treat as absolute path
-        base_path = Path(log_path)
+        # Treat as a user-supplied directory.
+        # Reject relative paths to avoid ambiguity; point to "cwd" mode instead.
+        path = Path(log_path)
+        if not path.is_absolute():
+            raise ValueError(
+                f"log_dir must be an absolute path (got {log_path!r}); "
+                "use 'cwd' mode for current-working-directory output"
+            )
+        base_path = path
 
     # Validate path exists and is a directory
     if not base_path.exists():
