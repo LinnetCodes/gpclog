@@ -143,7 +143,7 @@ config = GPCLoggerConfig(
     level="WARNING",           # 只记录 WARNING 及以上
     output_to_stdout=False,    # 不输出到控制台
     output_to_file=True,       # 输出到文件
-    log_path="/var/log/app",   # 已存在的父目录
+    log_dir="/var/log/app",   # 已存在的父目录
     rotation_enabled=True,
     rotation_size="50 MB",
     retention_enabled=True,
@@ -155,7 +155,7 @@ logger.warning("This will be logged")
 logger.info("This will NOT be logged (below WARNING level)")
 ```
 
-如果 `log_path` 目录名本身不是 `gpclog_output`，gpclog 实际会写入该目录下的 `gpclog_output` 子目录。
+如果 `log_dir` 目录名本身不是 `gpclog_output`，gpclog 实际会写入该目录下的 `gpclog_output` 子目录。
 
 ### 从 GPConfigManager 创建
 
@@ -181,7 +181,7 @@ configured_class_name: "GPCLogger"
 level: DEBUG
 output_to_file: true
 output_to_stdout: true
-log_path: auto
+log_dir: auto
 ```
 
 ### 多 Logger 共存

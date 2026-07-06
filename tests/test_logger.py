@@ -19,7 +19,7 @@ class TestGPCLogger:
             level="DEBUG",
             output_to_file=False,
             output_to_stdout=True,
-            log_path=str(tmp_path),
+            log_dir=str(tmp_path),
         )
 
         with patch(
@@ -82,7 +82,9 @@ class TestGPCLogger:
         assert logger.config is config
         assert logger.config.level == "WARNING"
 
-    def test_bound_logger_cache_prevents_duplicate_handlers(self, tmp_path: Path) -> None:
+    def test_bound_logger_cache_prevents_duplicate_handlers(
+        self, tmp_path: Path
+    ) -> None:
         """Test that cached bound loggers prevent duplicate handler creation."""
         from loguru import logger as loguru_logger
 

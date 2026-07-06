@@ -118,7 +118,7 @@ output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
 
-log_path: auto
+log_dir: auto
 
 rotation_enabled: true
 rotation_size: "50 MB"
@@ -158,11 +158,12 @@ def worker(pid):
     logger = gpclog.get_logger("worker", sn=pid)
     logger.info(f"Process {pid} started")
 
-processes = [Process(target=worker, args=(i,)) for i in range(4)]
-for p in processes:
-    p.start()
-for p in processes:
-    p.join()
+if __name__ == "__main__":
+    processes = [Process(target=worker, args=(i,)) for i in range(4)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 ```
 
 All `worker` loggers share the same configuration, but each writes to its own log file:
@@ -216,14 +217,15 @@ logger = GPCLogger(config)
 | `auto` | Auto-detect (recommended) | `auto` |
 | `env` | Use GPCLOG_PATH environment variable | `env` |
 | `home` | User home directory | `home` |
+| `cwd` | Current working directory | `cwd` |
 | Absolute path | Existing directory path | `/var/log/myapp` |
 
 ### Auto Mode Resolution
 
-1. Check `GPCLOG_PATH` environment variable
-2. If exists and valid, use that path
-3. Otherwise, use user home directory
-4. Create `gpclog_output` subfolder in the specified directory
+1. If `GPCLOG_PATH` environment variable is set, use it
+2. Otherwise, fall back to the user home directory (with a `warnings.warn`)
+3. Validate the chosen path exists and is a directory
+4. Create `gpclog_output` subfolder inside the chosen path
 
 For absolute paths, the directory must already exist. If the directory name is not already `gpclog_output`, gpclog writes under `<path>/gpclog_output/`.
 
@@ -237,7 +239,7 @@ export GPCLOG_PATH=/var/log/myapp
 ```python
 import gpclog
 
-# Use log_path: env in config file
+# Use log_dir: env in config file
 # Or use auto mode directly
 logger = gpclog.get_logger("myapp")
 # Logs will output to /var/log/myapp/gpclog_output/myapp.log
@@ -259,7 +261,7 @@ output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
 
-log_path: "auto"
+log_dir: "auto"
 
 rotation_enabled: false
 rotation_size: "10 MB"

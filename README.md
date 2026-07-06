@@ -20,6 +20,11 @@ pip install gpclog
 
 ## Quick Start
 
+> **Note (import side effect):** importing `gpclog` constructs its singleton
+> manager, which calls `loguru.logger.remove()` and **clears any pre-existing
+> loguru handlers**. If you configure loguru yourself, do so *after* importing
+> `gpclog`.
+
 ### Basic Usage
 
 ```python
@@ -56,13 +61,13 @@ Configuration schema, multiprocess usage, rotation/retention, and API details ar
 Build and validate the documentation locally:
 
 ```bash
-venv/bin/mkdocs build --clean --strict
+mkdocs build --clean --strict
 ```
 
 Preview the documentation locally:
 
 ```bash
-venv/bin/mkdocs serve
+mkdocs serve
 ```
 
 ## API Reference
