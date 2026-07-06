@@ -8,6 +8,16 @@ The public API entry point for the gpclog package, providing a simple logging ma
 import gpclog
 ```
 
+!!! warning "Important: importing gpclog clears loguru handlers"
+
+    As a **side effect of importing `gpclog`**, the `GPCLoggerManager`
+    singleton is constructed, which calls `loguru.logger.remove()`. This
+    **clears any pre-existing loguru handlers** that your application (or
+    another library) had configured. If you configure loguru handlers
+    yourself, do so **after** importing `gpclog`, or call
+    `loguru.logger.add(...)` again afterwards. See also the
+    [`reset()`](#reset) notes below — `reset()` performs the same removal.
+
 ## Exported Members
 
 ```python
@@ -150,7 +160,7 @@ def test_something():
 **Notes:**
 
 - This function clears all created loggers
-- All loguru handlers will be removed
+- All loguru handlers will be removed (same `loguru_logger.remove()` that runs on import)
 - Primarily for testing scenarios, production code typically doesn't need to call this
 
 ---
@@ -236,11 +246,12 @@ def worker(process_id):
     # Output to: ~/gpclog_output/worker-{process_id}.log
 
 # Start multiple processes
-processes = [Process(target=worker, args=(i,)) for i in range(4)]
-for p in processes:
-    p.start()
-for p in processes:
-    p.join()
+if __name__ == "__main__":
+    processes = [Process(target=worker, args=(i,)) for i in range(4)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 
 # Result:
 # worker-0.log: Process 0 logs

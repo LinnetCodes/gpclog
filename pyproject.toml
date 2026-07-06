@@ -17,7 +17,7 @@ keywords = [
     "python",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -42,6 +42,11 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=4.0",
     "ruff>=0.4.0",
+    # Documentation (MkDocs Material + i18n). pymdown-extensions is pulled in
+    # transitively by mkdocs-material and powers the pymdownx.* markdown extensions.
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocs-static-i18n>=1.2",
 ]
 
 [project.urls]

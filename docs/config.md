@@ -83,7 +83,7 @@ level: DEBUG
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `log_path` | `str` | `"auto"` | Log path: auto, env, home, or an existing absolute directory |
+| `log_dir` | `str` | `"auto"` | Log directory: `auto`, `env`, `home`, `cwd`, or an existing absolute directory (relative paths are rejected) |
 
 ### Rotation Configuration
 
@@ -187,20 +187,23 @@ config = GPCLoggerConfig(
 ```python
 from gpclog.config import GPCLoggerConfig
 
-# Use auto-detect (recommended)
-config = GPCLoggerConfig(name="app", log_path="auto")
+# Use auto-detect (recommended): GPCLOG_PATH env var, else the home directory
+config = GPCLoggerConfig(name="app", log_dir="auto")
 
 # Use GPCLOG_PATH environment variable
-config = GPCLoggerConfig(name="app", log_path="env")
+config = GPCLoggerConfig(name="app", log_dir="env")
 
 # Use user home directory
-config = GPCLoggerConfig(name="app", log_path="home")
+config = GPCLoggerConfig(name="app", log_dir="home")
 
-# Use an existing absolute parent directory
-config = GPCLoggerConfig(name="app", log_path="/var/log/myapp")
+# Use the current working directory
+config = GPCLoggerConfig(name="app", log_dir="cwd")
+
+# Use an existing absolute parent directory (relative paths are rejected)
+config = GPCLoggerConfig(name="app", log_dir="/var/log/myapp")
 ```
 
-The directory passed in `log_path` must already exist. Unless the directory name is already `gpclog_output`, gpclog creates and uses a `gpclog_output` subdirectory inside it.
+The directory passed in `log_dir` must already exist — the same existence check applies to all modes including `cwd`/`home`/`auto` (these resolve to well-known directories that should always exist at runtime). Unless the directory name is already `gpclog_output`, gpclog creates and uses a `gpclog_output` subdirectory inside it. A relative path is rejected — use the `"cwd"` mode if you want current-working-directory output.
 
 ### Custom Log Format
 
@@ -262,7 +265,7 @@ level: DEBUG
 output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
-log_path: auto
+log_dir: auto
 rotation_enabled: true
 rotation_size: "50 MB"
 retention_enabled: true
@@ -286,25 +289,42 @@ logger = gpclog.GPCLogger(config)
 logger = manager.get_object("logs.database")
 ```
 
+### The `name` field
+
+`GPCLoggerConfig` inherits the ``name`` field from ``gpconfig.GPConfig``. When a configuration is loaded **from a YAML file**, ``GPConfigManager`` automatically overwrites ``name`` with the filename (without the ``.yaml`` extension) — for example, ``database.yaml`` becomes ``name="database"``. You do **not** need to include ``name: database`` in the YAML file itself; the filename determines the logger identity.
+
+When constructing a ``GPCLoggerConfig`` **directly in code**, you should supply ``name=`` explicitly. If left unset (the default is ``""``), ``GPCLogger.__init__`` falls back to ``"default"`` as the logger name.
+
 ## Type Validation
 
-`GPCLoggerConfig` inherits from Pydantic-based gpconfig classes, so field types are validated. The project does not currently validate the allowed values of `level` at config-construction time.
+`GPCLoggerConfig` inherits from Pydantic-based gpconfig classes, so field types are validated. In addition, `level`, `rotation_size`, and `retention_days` are now **validated at config-construction time** (a `ValidationError` is raised if they are invalid):
+
+- **`level`** must be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (case-sensitive; the empty string is rejected).
+- **`rotation_size`** must match `<number> <KB|MB|GB>` (case-insensitive), e.g. `"10 MB"`, `"500KB"`, `"1 GB"`. A missing unit (e.g. `"10"`) or an unsupported unit (e.g. `"10 TB"`) is rejected.
+- **`retention_days`** must be `>= 0` always, and `> 0` when `retention_enabled` is `True` (a value of `0` with retention enabled would delete logs immediately).
 
 ```python
+from pydantic import ValidationError
+
 from gpclog.config import GPCLoggerConfig
 
+# Valid configuration constructs fine.
 config = GPCLoggerConfig(
     name="app",
     level="DEBUG",
     rotation_size="10 MB",
 )
 
-# Type validation applies to field shapes, but level names are not restricted here.
-config = GPCLoggerConfig(name="app", level="INVALID_LEVEL")
-assert config.level == "INVALID_LEVEL"
+# An invalid level is now REJECTED at construction time (no longer deferred).
+try:
+    GPCLoggerConfig(name="app", level="INVALID_LEVEL")
+except ValidationError as exc:
+    print(exc)  # level must be one of ['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']
 ```
 
 ## Saving Configuration
+
+> **Note:** `save()` requires `cfg_file_path` to be set, which happens automatically when the config is loaded via `GPConfigManager` (as shown above). A config constructed directly in code (e.g. `GPCLoggerConfig(name="app")`) has no `cfg_file_path`, so calling `save()` on it will raise — it has nowhere to write.
 
 ```python
 from gpconfig import GPConfigManager
@@ -334,7 +354,7 @@ level: DEBUG
 output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
-log_path: auto
+log_dir: auto
 rotation_enabled: false
 retention_enabled: false
 ```
@@ -349,7 +369,7 @@ level: WARNING
 output_to_stdout: false
 output_to_stderr: true
 output_to_file: true
-log_path: env
+log_dir: env
 rotation_enabled: true
 rotation_size: "100 MB"
 retention_enabled: true

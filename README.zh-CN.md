@@ -20,6 +20,10 @@ pip install gpclog
 
 ## 快速开始
 
+> **提示（导入副作用）：** 导入 `gpclog` 会构造其单例管理器，其中会调用
+> `loguru.logger.remove()`，**清除此前已配置的所有 loguru handlers**。如果你自行
+> 配置 loguru，请在导入 `gpclog` *之后* 再进行。
+
 ### 基本使用
 
 ```python
@@ -56,13 +60,13 @@ logger = manager.get_object("logs.database")
 本地构建并校验文档：
 
 ```bash
-venv/bin/mkdocs build --clean --strict
+mkdocs build --clean --strict
 ```
 
 本地预览文档：
 
 ```bash
-venv/bin/mkdocs serve
+mkdocs serve
 ```
 
 ## API 参考

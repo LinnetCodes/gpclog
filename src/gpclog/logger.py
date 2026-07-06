@@ -8,7 +8,7 @@ from gpconfig import GPConfigurable
 from loguru import logger as loguru_logger
 
 from gpclog.config import GPCLoggerConfig
-from gpclog.utils import resolve_log_path
+from gpclog.utils import resolve_log_path, validate_logger_name
 
 
 class GPCLogger(GPConfigurable):
@@ -17,6 +17,16 @@ class GPCLogger(GPConfigurable):
     This class provides a category-based logger with configuration support
     through GPCLoggerConfig. Each logger instance writes to its own file
     and can be configured independently.
+
+    Note:
+        There are two cache layers: ``GPCLoggerManager._loggers`` dedups
+        GPCLogger instances, and ``GPCLogger._bound_loggers`` dedups loguru
+        handlers. Both are cleared by ``reset()``.
+
+    Warning:
+        The class-level ``_bound_loggers`` cache is NOT thread-safe (a
+        check-then-set race exists in ``_create_logger``). Initialize loggers
+        from the main thread before spawning worker threads.
     """
 
     # Class-level cache for bound loguru loggers to prevent duplicate handlers
@@ -39,6 +49,7 @@ class GPCLogger(GPConfigurable):
         """
         super().__init__(config)
         self._name: str = config.name or "default"
+        validate_logger_name(self._name)
         self._logger = self._create_logger(config)
 
     @property
@@ -100,7 +111,7 @@ class GPCLogger(GPConfigurable):
 
         # Add file handler if enabled
         if config.output_to_file:
-            log_dir = resolve_log_path(config.log_path)
+            log_dir = resolve_log_path(config.log_dir)
             log_file = log_dir / f"{self._name}.log"
 
             # Configure rotation
