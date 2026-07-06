@@ -203,7 +203,7 @@ config = GPCLoggerConfig(name="app", log_dir="cwd")
 config = GPCLoggerConfig(name="app", log_dir="/var/log/myapp")
 ```
 
-The directory passed in `log_dir` must already exist (except for `cwd`/`home`/`auto`, which resolve to an always-valid directory). Unless the directory name is already `gpclog_output`, gpclog creates and uses a `gpclog_output` subdirectory inside it. A relative path is rejected — use the `"cwd"` mode if you want current-working-directory output.
+The directory passed in `log_dir` must already exist — the same existence check applies to all modes including `cwd`/`home`/`auto` (these resolve to well-known directories that should always exist at runtime). Unless the directory name is already `gpclog_output`, gpclog creates and uses a `gpclog_output` subdirectory inside it. A relative path is rejected — use the `"cwd"` mode if you want current-working-directory output.
 
 ### Custom Log Format
 
@@ -288,6 +288,12 @@ logger = gpclog.GPCLogger(config)
 # Method 2: Create object directly (recommended)
 logger = manager.get_object("logs.database")
 ```
+
+### The `name` field
+
+`GPCLoggerConfig` inherits the ``name`` field from ``gpconfig.GPConfig``. When a configuration is loaded **from a YAML file**, ``GPConfigManager`` automatically overwrites ``name`` with the filename (without the ``.yaml`` extension) — for example, ``database.yaml`` becomes ``name="database"``. You do **not** need to include ``name: database`` in the YAML file itself; the filename determines the logger identity.
+
+When constructing a ``GPCLoggerConfig`` **directly in code**, you should supply ``name=`` explicitly. If left unset (the default is ``""``), ``GPCLogger.__init__`` falls back to ``"default"`` as the logger name.
 
 ## Type Validation
 

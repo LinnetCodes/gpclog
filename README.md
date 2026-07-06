@@ -61,13 +61,13 @@ Configuration schema, multiprocess usage, rotation/retention, and API details ar
 Build and validate the documentation locally:
 
 ```bash
-venv/bin/mkdocs build --clean --strict
+mkdocs build --clean --strict
 ```
 
 Preview the documentation locally:
 
 ```bash
-venv/bin/mkdocs serve
+mkdocs serve
 ```
 
 ## API Reference

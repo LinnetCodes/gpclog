@@ -203,7 +203,7 @@ config = GPCLoggerConfig(name="app", log_dir="cwd")
 config = GPCLoggerConfig(name="app", log_dir="/var/log/myapp")
 ```
 
-`log_dir` 指向的目录必须已经存在（`cwd`/`home`/`auto` 除外，它们会解析到始终有效的目录）。除非目录名本身就是 `gpclog_output`，否则 gpclog 会在其下创建并使用 `gpclog_output` 子目录。相对路径会被拒绝——如果需要输出到当前工作目录，请使用 `"cwd"` 模式。
+`log_dir` 指向的目录必须已经存在 —— 相同的存在性检查适用于所有模式，包括 `cwd`/`home`/`auto`（它们解析到的都是运行时应当始终存在的已知目录）。除非目录名本身就是 `gpclog_output`，否则 gpclog 会在其下创建并使用 `gpclog_output` 子目录。相对路径会被拒绝——如果需要输出到当前工作目录，请使用 `"cwd"` 模式。
 
 ### 自定义日志格式
 
@@ -288,6 +288,12 @@ logger = GPCLogger(config)
 # 方式 2：直接创建对象（推荐）
 logger = manager.get_object("logs.database")
 ```
+
+### `name` 字段
+
+`GPCLoggerConfig` 从 ``gpconfig.GPConfig`` 继承了 ``name`` 字段。当配置**从 YAML 文件加载**时，``GPConfigManager`` 会自动用文件名（去掉 ``.yaml`` 后缀）覆盖 ``name``——例如 ``database.yaml`` → ``name="database"``。你**不需要**在 YAML 文件中写 ``name: database``；文件名本身就决定了 logger 的身份。
+
+当**直接在代码中**构造 ``GPCLoggerConfig`` 时，应显式传入 ``name=``。如果留空（默认为 ``""``），``GPCLogger.__init__`` 会回退为 ``"default"`` 作为 logger 名称。
 
 ## 类型验证
 

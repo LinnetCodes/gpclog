@@ -244,11 +244,12 @@ def worker(process_id):
     # 输出到: ~/gpclog_output/worker-{process_id}.log
 
 # 启动多个进程
-processes = [Process(target=worker, args=(i,)) for i in range(4)]
-for p in processes:
-    p.start()
-for p in processes:
-    p.join()
+if __name__ == "__main__":
+    processes = [Process(target=worker, args=(i,)) for i in range(4)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 
 # 结果：
 # worker-0.log: 进程 0 的日志

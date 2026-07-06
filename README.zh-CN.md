@@ -60,13 +60,13 @@ logger = manager.get_object("logs.database")
 本地构建并校验文档：
 
 ```bash
-venv/bin/mkdocs build --clean --strict
+mkdocs build --clean --strict
 ```
 
 本地预览文档：
 
 ```bash
-venv/bin/mkdocs serve
+mkdocs serve
 ```
 
 ## API 参考

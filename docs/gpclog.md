@@ -246,11 +246,12 @@ def worker(process_id):
     # Output to: ~/gpclog_output/worker-{process_id}.log
 
 # Start multiple processes
-processes = [Process(target=worker, args=(i,)) for i in range(4)]
-for p in processes:
-    p.start()
-for p in processes:
-    p.join()
+if __name__ == "__main__":
+    processes = [Process(target=worker, args=(i,)) for i in range(4)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 
 # Result:
 # worker-0.log: Process 0 logs

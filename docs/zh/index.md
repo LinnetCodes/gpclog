@@ -158,11 +158,12 @@ def worker(pid):
     logger = gpclog.get_logger("worker", sn=pid)
     logger.info(f"Process {pid} started")
 
-processes = [Process(target=worker, args=(i,)) for i in range(4)]
-for p in processes:
-    p.start()
-for p in processes:
-    p.join()
+if __name__ == "__main__":
+    processes = [Process(target=worker, args=(i,)) for i in range(4)]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 ```
 
 所有 `worker` logger 共享同一份配置，但各自写入独立的日志文件：
@@ -216,14 +217,15 @@ logger = GPCLogger(config)
 | `auto` | 自动检测（推荐） | `auto` |
 | `env` | 使用 GPCLOG_PATH 环境变量 | `env` |
 | `home` | 用户主目录 | `home` |
+| `cwd` | 当前工作目录 | `cwd` |
 | 绝对路径 | 已存在的目录路径 | `/var/log/myapp` |
 
 ### auto 模式解析流程
 
-1. 检查 `GPCLOG_PATH` 环境变量
-2. 如果存在且有效，使用该路径
-3. 否则使用用户主目录
-4. 最终在指定目录下创建 `gpclog_output` 子文件夹
+1. 如果 `GPCLOG_PATH` 环境变量已设置，使用其值
+2. 否则退回使用用户主目录（同时发出 `warnings.warn`）
+3. 验证选定的路径存在且为目录
+4. 在选定路径下创建 `gpclog_output` 子文件夹
 
 对于绝对路径，目录本身必须已经存在。如果目录名不是 `gpclog_output`，gpclog 实际会写入 `<path>/gpclog_output/`。
 
