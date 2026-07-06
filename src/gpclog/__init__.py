@@ -12,7 +12,7 @@ from gpclog.logger import GPCLogger
 from gpclog.manager import GPCLoggerManager
 from gpclog.utils import validate_logger_name
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 # Auto-register config and configurable classes with GPConfigManager
 GPConfigManager.register_config_class(GPCLoggerConfig)

@@ -42,7 +42,7 @@ class TestPublicAPI:
     def test_version_exposed(self) -> None:
         """Test that __version__ is exposed."""
         assert hasattr(gpclog, "__version__")
-        assert gpclog.__version__ == "0.2.0"
+        assert gpclog.__version__ == "0.3.0"
 
     def test_all_exports(self) -> None:
         """Test that __all__ contains expected exports."""

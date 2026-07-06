@@ -92,11 +92,12 @@ class GPCLoggerManager:
         """
         cache_key = (logger_name, sn)
 
-        # Check cache first
+        # Validate before cache lookup so validation always runs,
+        # consistent with the public gpclog.get_logger entry point.
+        validate_logger_name(logger_name)
+
         if cache_key in self._loggers:
             return self._loggers[cache_key]
-
-        validate_logger_name(logger_name)
 
         # Get or create configuration using original logger_name
         config = self._get_config(logger_name)

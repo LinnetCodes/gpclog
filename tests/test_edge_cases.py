@@ -44,6 +44,12 @@ class TestValidateLoggerName:
             "a:b",
             "用户",  # non-ASCII (Chinese) characters
             "a\x00b",  # null byte
+            "..",  # bare dots (pure punctuation)
+            ".",
+            "...",
+            "---",
+            "___",
+            "._-",
         ],
     )
     def test_invalid_names_rejected(self, name: str) -> None:

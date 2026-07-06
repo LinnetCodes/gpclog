@@ -33,6 +33,14 @@ def validate_logger_name(name: str) -> str:
             f"invalid logger name {name!r}: only the characters "
             "'[A-Za-z0-9_.-]' are permitted"
         )
+    # Reject names that are entirely punctuation — while not exploitable
+    # (the .log suffix neutralizes traversal), a name like ".." or "---" is
+    # almost certainly a mistake and should be surfaced early.
+    if set(name) <= {".", "-", "_"}:
+        raise ValueError(
+            f"invalid logger name {name!r}: name must contain at least one "
+            "letter or digit"
+        )
     return name
 
 
