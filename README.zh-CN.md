@@ -20,6 +20,10 @@ pip install gpclog
 
 ## 快速开始
 
+> **提示（导入副作用）：** 导入 `gpclog` 会构造其单例管理器，其中会调用
+> `loguru.logger.remove()`，**清除此前已配置的所有 loguru handlers**。如果你自行
+> 配置 loguru，请在导入 `gpclog` *之后* 再进行。
+
 ### 基本使用
 
 ```python

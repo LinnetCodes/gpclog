@@ -118,7 +118,7 @@ output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
 
-log_path: auto
+log_dir: auto
 
 rotation_enabled: true
 rotation_size: "50 MB"
@@ -237,7 +237,7 @@ export GPCLOG_PATH=/var/log/myapp
 ```python
 import gpclog
 
-# 配置文件中使用 log_path: env
+# 配置文件中使用 log_dir: env
 # 或者直接使用 auto 模式
 logger = gpclog.get_logger("myapp")
 # 日志将输出到 /var/log/myapp/gpclog_output/myapp.log
@@ -259,7 +259,7 @@ output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
 
-log_path: "auto"
+log_dir: "auto"
 
 rotation_enabled: false
 rotation_size: "10 MB"

@@ -83,7 +83,7 @@ level: DEBUG
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `log_path` | `str` | `"auto"` | 日志路径：auto, env, home，或已存在的绝对目录 |
+| `log_dir` | `str` | `"auto"` | 日志目录：`auto`、`env`、`home`、`cwd`，或已存在的绝对目录（相对路径会被拒绝） |
 
 ### 轮转配置
 
@@ -187,20 +187,23 @@ config = GPCLoggerConfig(
 ```python
 from gpclog.config import GPCLoggerConfig
 
-# 使用自动检测（推荐）
-config = GPCLoggerConfig(name="app", log_path="auto")
+# 使用自动检测（推荐）：GPCLOG_PATH 环境变量，否则使用主目录
+config = GPCLoggerConfig(name="app", log_dir="auto")
 
 # 使用环境变量 GPCLOG_PATH
-config = GPCLoggerConfig(name="app", log_path="env")
+config = GPCLoggerConfig(name="app", log_dir="env")
 
 # 使用用户主目录
-config = GPCLoggerConfig(name="app", log_path="home")
+config = GPCLoggerConfig(name="app", log_dir="home")
 
-# 使用已存在的绝对父目录
-config = GPCLoggerConfig(name="app", log_path="/var/log/myapp")
+# 使用当前工作目录
+config = GPCLoggerConfig(name="app", log_dir="cwd")
+
+# 使用已存在的绝对父目录（相对路径会被拒绝）
+config = GPCLoggerConfig(name="app", log_dir="/var/log/myapp")
 ```
 
-`log_path` 指向的目录必须已经存在。除非目录名本身就是 `gpclog_output`，否则 gpclog 会在其下创建并使用 `gpclog_output` 子目录。
+`log_dir` 指向的目录必须已经存在（`cwd`/`home`/`auto` 除外，它们会解析到始终有效的目录）。除非目录名本身就是 `gpclog_output`，否则 gpclog 会在其下创建并使用 `gpclog_output` 子目录。相对路径会被拒绝——如果需要输出到当前工作目录，请使用 `"cwd"` 模式。
 
 ### 自定义日志格式
 
@@ -262,7 +265,7 @@ level: DEBUG
 output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
-log_path: auto
+log_dir: auto
 rotation_enabled: true
 rotation_size: "50 MB"
 retention_enabled: true
@@ -288,23 +291,34 @@ logger = manager.get_object("logs.database")
 
 ## 类型验证
 
-`GPCLoggerConfig` 继承自基于 Pydantic 的 gpconfig 类，因此字段类型会被校验。但当前项目不会在配置对象创建阶段校验 `level` 的取值是否合法。
+`GPCLoggerConfig` 继承自基于 Pydantic 的 gpconfig 类，因此字段类型会被校验。此外，`level`、`rotation_size` 和 `retention_days` 现在**在配置构造阶段即被校验**（不合法时会抛出 `ValidationError`）：
+
+- **`level`** 必须是 `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一（区分大小写；空字符串会被拒绝）。
+- **`rotation_size`** 必须匹配 `<数字> <KB|MB|GB>`（不区分大小写），例如 `"10 MB"`、`"500KB"`、`"1 GB"`。缺少单位（如 `"10"`）或不支持的单位（如 `"10 TB"`）会被拒绝。
+- **`retention_days`** 始终必须 `>= 0`，且当 `retention_enabled` 为 `True` 时必须 `> 0`（启用保留时为 0 会立即删除日志）。
 
 ```python
+from pydantic import ValidationError
+
 from gpclog.config import GPCLoggerConfig
 
+# 合法配置可以正常构造。
 config = GPCLoggerConfig(
     name="app",
     level="DEBUG",
     rotation_size="10 MB",
 )
 
-# 这里会校验字段类型，但不会限制 level 名称。
-config = GPCLoggerConfig(name="app", level="INVALID_LEVEL")
-assert config.level == "INVALID_LEVEL"
+# 不合法的 level 现在会在构造阶段被拒绝（不再延后）。
+try:
+    GPCLoggerConfig(name="app", level="INVALID_LEVEL")
+except ValidationError as exc:
+    print(exc)  # level must be one of ['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']
 ```
 
 ## 保存配置
+
+> **注意：** `save()` 要求 `cfg_file_path` 已被设置——当配置通过 `GPConfigManager` 加载时（如上所示）会自动设置。直接在代码中构造的配置（例如 `GPCLoggerConfig(name="app")`）没有 `cfg_file_path`，因此对其调用 `save()` 会抛出异常——它没有可写入的目标文件。
 
 ```python
 from gpconfig import GPConfigManager
@@ -334,7 +348,7 @@ level: DEBUG
 output_to_stdout: true
 output_to_stderr: false
 output_to_file: true
-log_path: auto
+log_dir: auto
 rotation_enabled: false
 retention_enabled: false
 ```
@@ -349,7 +363,7 @@ level: WARNING
 output_to_stdout: false
 output_to_stderr: true
 output_to_file: true
-log_path: env
+log_dir: env
 rotation_enabled: true
 rotation_size: "100 MB"
 retention_enabled: true

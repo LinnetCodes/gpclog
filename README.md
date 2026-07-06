@@ -20,6 +20,11 @@ pip install gpclog
 
 ## Quick Start
 
+> **Note (import side effect):** importing `gpclog` constructs its singleton
+> manager, which calls `loguru.logger.remove()` and **clears any pre-existing
+> loguru handlers**. If you configure loguru yourself, do so *after* importing
+> `gpclog`.
+
 ### Basic Usage
 
 ```python

@@ -129,8 +129,6 @@ class TestIntegration:
         """
         from gpconfig import GPConfigManager
 
-        from gpclog.logger import GPCLogger
-
         # Reset singleton for clean state
         gpclog.reset()
 
@@ -145,7 +143,7 @@ class TestIntegration:
         if log_output_dir.exists():
             shutil.rmtree(log_output_dir)
 
-        # Set GPCLOG_PATH environment variable for log_path: env configs
+        # Set GPCLOG_PATH environment variable for log_dir: env configs
         env_vars = {"GPCLOG_PATH": str(log_dir)}
 
         with patch.dict(os.environ, env_vars, clear=False):
@@ -161,10 +159,14 @@ class TestIntegration:
 
             # Test database logger (INFO level, output_to_stderr=True)
             database_logger.info("Database connection established")
-            database_logger.debug("This debug message should NOT appear")  # Below INFO level
+            database_logger.debug(
+                "This debug message should NOT appear"
+            )  # Below INFO level
 
             # Test event_bus logger (DEBUG level, output_to_stdout=True)
-            event_bus_logger.debug("Event bus initialized")  # Should appear at DEBUG level
+            event_bus_logger.debug(
+                "Event bus initialized"
+            )  # Should appear at DEBUG level
             event_bus_logger.info("Processing event")
 
             # Test ui logger (WARNING level)
@@ -173,27 +175,31 @@ class TestIntegration:
             ui_logger.error("UI error occurred")
 
         # Verify log files were created and contain correct content
-        # Database logger (log_path: env -> tests/mocks/log/gpclog_output)
+        # Database logger (log_dir: env -> tests/mocks/log/gpclog_output)
         db_log_file = log_dir / "gpclog_output" / "database.log"
         assert db_log_file.exists(), "Database log file should exist"
         db_content = db_log_file.read_text(encoding="utf-8")
         assert "Database connection established" in db_content
-        assert "This debug message should NOT appear" not in db_content  # Filtered by INFO level
+        assert (
+            "This debug message should NOT appear" not in db_content
+        )  # Filtered by INFO level
 
-        # Event bus logger (log_path: env -> tests/mocks/log/gpclog_output)
+        # Event bus logger (log_dir: env -> tests/mocks/log/gpclog_output)
         event_bus_log_file = log_dir / "gpclog_output" / "event_bus.log"
         assert event_bus_log_file.exists(), "Event bus log file should exist"
         event_bus_content = event_bus_log_file.read_text(encoding="utf-8")
         assert "Event bus initialized" in event_bus_content  # DEBUG level should appear
         assert "Processing event" in event_bus_content
 
-        # UI logger (log_path: absolute path -> tests/mocks/log/gpclog_output)
+        # UI logger (log_dir: absolute path -> tests/mocks/log/gpclog_output)
         ui_log_file = log_dir / "gpclog_output" / "ui.log"
         assert ui_log_file.exists(), "UI log file should exist"
         ui_content = ui_log_file.read_text(encoding="utf-8")
         assert "UI warning message" in ui_content
         assert "UI error occurred" in ui_content
-        assert "This info message should NOT appear" not in ui_content  # Filtered by WARNING level
+        assert (
+            "This info message should NOT appear" not in ui_content
+        )  # Filtered by WARNING level
 
         # Verify log isolation: each logger's messages are in its own file only
         assert "Database connection established" not in event_bus_content
@@ -228,7 +234,7 @@ class TestIntegration:
         if log_output_dir.exists():
             shutil.rmtree(log_output_dir)
 
-        # Set GPCLOG_PATH environment variable for log_path: env configs
+        # Set GPCLOG_PATH environment variable for log_dir: env configs
         env_vars = {"GPCLOG_PATH": str(log_dir)}
 
         with patch.dict(os.environ, env_vars, clear=False):

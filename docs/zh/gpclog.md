@@ -8,6 +8,14 @@ gpclog 包的公共 API 入口，提供简洁的日志管理接口。
 import gpclog
 ```
 
+!!! warning "重要：导入 gpclog 会清除 loguru 的 handlers"
+
+    作为**导入 `gpclog` 的副作用**，会构造 `GPCLoggerManager` 单例，其中会调用
+    `loguru.logger.remove()`。这会**清除此前应用（或其他库）已配置的所有 loguru
+    handlers**。如果你自行配置了 loguru handlers，请在**导入 `gpclog` 之后**再配置，
+    或之后再次调用 `loguru.logger.add(...)`。另见下方的 [`reset()`](#reset) 说明——
+    `reset()` 会执行相同的清除操作。
+
 ## 导出成员
 
 ```python
@@ -150,7 +158,7 @@ def test_something():
 **注意事项：**
 
 - 此函数会清除所有已创建的日志记录器
-- 所有 loguru handlers 会被移除
+- 所有 loguru handlers 会被移除（与导入时执行的 `loguru_logger.remove()` 相同）
 - 主要用于测试场景，生产代码通常不需要调用
 
 ---
