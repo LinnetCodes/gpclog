@@ -10,6 +10,7 @@ from gpconfig import GPConfigFolder, GPConfigManager
 from gpclog.config import GPCLoggerConfig
 from gpclog.logger import GPCLogger
 from gpclog.manager import GPCLoggerManager
+from gpclog.utils import validate_logger_name
 
 __version__ = "0.2.0"
 
@@ -17,6 +18,8 @@ __version__ = "0.2.0"
 GPConfigManager.register_config_class(GPCLoggerConfig)
 GPConfigManager.register_configurable_class(GPCLogger)
 
+# Note: GPCLoggerManager is deliberately NOT exported in __all__ — it is an
+# internal implementation detail, but tests import it directly. See AGENTS.md.
 __all__ = [
     "get_logger",
     "set_config_folder",
@@ -55,6 +58,7 @@ def get_logger(logger_name: str, sn: Optional[int] = None) -> GPCLogger:
         >>> worker_logger = gpclog.get_logger("worker", sn=process_id)
         >>> worker_logger.info("Process started")
     """
+    validate_logger_name(logger_name)
     return _manager.get_logger(logger_name, sn)
 
 
@@ -84,6 +88,11 @@ def reset() -> None:
     This function is primarily intended for testing purposes to ensure
     a clean state between tests. It resets the internal state and clears
     all cached loggers.
+
+    Note:
+        ``GPCLogger`` references obtained before ``reset()`` become stale
+        (their handlers are removed from loguru). Re-fetch any logger you
+        still need via ``get_logger()`` after resetting.
     """
     global _manager
     GPCLoggerManager._instance = None

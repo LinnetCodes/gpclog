@@ -5,9 +5,11 @@ from typing import ClassVar, Optional
 from loguru import logger as loguru_logger
 
 from gpconfig import GPConfigFolder
+from gpconfig.exceptions import ConfigNotFoundError
 
 from gpclog.config import GPCLoggerConfig
 from gpclog.logger import GPCLogger
+from gpclog.utils import validate_logger_name
 
 
 class GPCLoggerManager:
@@ -59,10 +61,18 @@ class GPCLoggerManager:
     def set_config_folder(self, cfg_folder: GPConfigFolder) -> None:
         """Set the configuration folder for logger configs.
 
+        Eagerly loads a ``default.yaml`` from the folder (if present) as the
+        fallback default configuration for loggers without their own config file.
+
         Args:
             cfg_folder: GPConfigFolder instance containing logger configurations.
         """
         self._config_folder = cfg_folder
+        try:
+            default_config = cfg_folder.get_config("default", GPCLoggerConfig)
+            self._default_config = default_config
+        except ConfigNotFoundError:
+            pass  # No default.yaml — keep the built-in default.
 
     def get_logger(self, logger_name: str, sn: Optional[int] = None) -> GPCLogger:
         """Get or create a logger by name.
@@ -86,25 +96,14 @@ class GPCLoggerManager:
         if cache_key in self._loggers:
             return self._loggers[cache_key]
 
+        validate_logger_name(logger_name)
+
         # Get or create configuration using original logger_name
         config = self._get_config(logger_name)
 
         # Override name to include sn if provided
         if sn is not None:
-            config = GPCLoggerConfig(
-                name=f"{logger_name}-{sn}",
-                level=config.level,
-                file_format=config.file_format,
-                console_format=config.console_format,
-                output_to_stdout=config.output_to_stdout,
-                output_to_stderr=config.output_to_stderr,
-                output_to_file=config.output_to_file,
-                log_path=config.log_path,
-                rotation_enabled=config.rotation_enabled,
-                rotation_size=config.rotation_size,
-                retention_enabled=config.retention_enabled,
-                retention_days=config.retention_days,
-            )
+            config = config.model_copy(update={"name": f"{logger_name}-{sn}"})
 
         # Create logger
         logger = GPCLogger(config)
@@ -128,74 +127,11 @@ class GPCLoggerManager:
         # Try to get config from config folder
         if self._config_folder is not None:
             try:
-                config = self._config_folder.get_config(logger_name, GPCLoggerConfig)
-                # Merge with defaults for missing fields
-                return self._merge_with_defaults(config)
-            except Exception:
-                # Config not found, try default.yaml
-                try:
-                    default_config = self._config_folder.get_config(
-                        "default", GPCLoggerConfig
-                    )
-                    self._default_config = self._merge_with_defaults(default_config)
-                except Exception:
-                    pass
+                return self._config_folder.get_config(logger_name, GPCLoggerConfig)
+            except ConfigNotFoundError:
+                # Specific logger config not found — fall back to default config below.
+                # (Validation/parse errors are NOT caught here — they propagate, per fail-early.)
+                pass
 
         # Use default config with the logger name
-        return GPCLoggerConfig(
-            name=logger_name,
-            level=self._default_config.level,
-            file_format=self._default_config.file_format,
-            console_format=self._default_config.console_format,
-            output_to_stdout=self._default_config.output_to_stdout,
-            output_to_stderr=self._default_config.output_to_stderr,
-            output_to_file=self._default_config.output_to_file,
-            log_path=self._default_config.log_path,
-            rotation_enabled=self._default_config.rotation_enabled,
-            rotation_size=self._default_config.rotation_size,
-            retention_enabled=self._default_config.retention_enabled,
-            retention_days=self._default_config.retention_days,
-        )
-
-    def _merge_with_defaults(self, config: GPCLoggerConfig) -> GPCLoggerConfig:
-        """Merge user config with defaults for missing fields.
-
-        Args:
-            config: User-provided configuration.
-
-        Returns:
-            GPCLoggerConfig with all fields filled.
-        """
-        defaults = self._default_config
-        return GPCLoggerConfig(
-            name=config.name,
-            level=config.level if config.level else defaults.level,
-            file_format=config.file_format
-            if config.file_format
-            else defaults.file_format,
-            console_format=config.console_format
-            if config.console_format
-            else defaults.console_format,
-            output_to_stdout=config.output_to_stdout
-            if config.output_to_stdout is not None
-            else defaults.output_to_stdout,
-            output_to_stderr=config.output_to_stderr
-            if config.output_to_stderr is not None
-            else defaults.output_to_stderr,
-            output_to_file=config.output_to_file
-            if config.output_to_file is not None
-            else defaults.output_to_file,
-            log_path=config.log_path if config.log_path else defaults.log_path,
-            rotation_enabled=config.rotation_enabled
-            if config.rotation_enabled is not None
-            else defaults.rotation_enabled,
-            rotation_size=config.rotation_size
-            if config.rotation_size
-            else defaults.rotation_size,
-            retention_enabled=config.retention_enabled
-            if config.retention_enabled is not None
-            else defaults.retention_enabled,
-            retention_days=config.retention_days
-            if config.retention_days is not None
-            else defaults.retention_days,
-        )
+        return self._default_config.model_copy(update={"name": logger_name})
